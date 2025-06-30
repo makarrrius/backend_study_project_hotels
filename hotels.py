@@ -1,4 +1,5 @@
 from fastapi import Query, Body, APIRouter
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -28,15 +29,20 @@ def delete_hotel(hotel_id: int):
     hotels = [hotel for hotel in hotels if hotel['id'] != hotel_id]
     return {'status': 'OK'}
 
+class Hotel(BaseModel):
+    title: str
+    name: str
+
 # Принимают body, request body (put, patch, post)
 @router.post("")
 def create_hotel(
-    title: str = Body(embed=True)
+    hotel_data: Hotel
 ):
     global hotels
     hotels.append({
-         'id': hotels[-1]['id'] + 1,
-         'title': title
+        'id': hotels[-1]['id'] + 1,
+        'title': hotel_data.title,
+        'name': hotel_data.name
     })
     return {'status': 'OK'}
 
@@ -44,16 +50,12 @@ def create_hotel(
 # Задача 1
 # PUT - ручка, клиент обязан отправить все параметры сущности кроме id, меняем только title и name, обязательно принимаем оба эти параметра
 @router.put('/{hotel_id}')
-def change_all_hotel_data(
-    hotel_id: int,
-    title: str = Body(),
-    name: str = Body()
-):
+def change_all_hotel_data(hotel_id: int, hotel_data: Hotel):
     global hotels
     for hotel in hotels:
         if hotel['id'] == hotel_id:
-            hotel['title'] = title
-            hotel['name'] = name
+            hotel['title'] = hotel_data.title
+            hotel['name'] = hotel_data.name
     return {'status': 'OK'} 
 
 # Задача 2
