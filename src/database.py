@@ -8,7 +8,7 @@ engine = create_async_engine(settings.db_url)
 
 async def func():
     async with engine.begin() as conn:
-        res = await conn.execute(text("SELECT (version)"))
+        res = await conn.execute(text("SELECT version()"))
         print(res.fetchone())
 
 asyncio.run(func())
