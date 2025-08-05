@@ -10,19 +10,19 @@ from src.models.hotels import HotelsOrm
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 # Принимают query и path параметры (get, delete)
-# Задание №2: Пагинация для отелей
+# Задание №4: Фильтрация по подстроке
 @router.get("")
 async def get_hotels(
     pagination: PaginationDep,
-    id: int | None = Query(None, description="Айдишник"),
-    title: str | None = Query(None, description="Название отеля")
+    title: str | None = Query(None, description="Название отеля"),
+    location: str | None = Query(None, description="Расположение отеля")
 ):
     async with async_session_maker() as session:
         query = select(HotelsOrm)
-        if id:
-            query = query.where(HotelsOrm.id == id)
         if title:
-            query = query.where(HotelsOrm.title == title)
+            query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
+        if location:
+            query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
         query = (
             query
             .limit(pagination.per_page)
@@ -32,10 +32,6 @@ async def get_hotels(
         result = await session.execute(query) # возвращает итератор - объект, который вернула алхимия, await - всегда запрос в базу
         hotels = result.scalars().all()
         return hotels
-
-    # first_page_elem_ind = pagination.per_page * (pagination.page - 1)
-    # last_page_elem_ind = pagination.per_page * pagination.page
-    # return hotels_[first_page_elem_ind:last_page_elem_ind]
 
 @router.delete("/{hotel_id}")
 def delete_hotel(hotel_id: int):
