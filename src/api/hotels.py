@@ -66,6 +66,7 @@ async def create_hotel(
 ):
     async with async_session_maker() as session: # объявляем асинхронный контекстный менеджер, максимум 100 одновременных подключений, по умолчанию алхимия создает 5 подключ, при нагрузке - доп. 10
         add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump()) # преобразуем модель алхимии (экземпляр класса) в словарь вида {'title':, 'location':}; раскрываем в кварги через 2 *
+        # print(add_hotel_stmt.compile(compile_kwargs={"literal_binds": True})) # 2ой вариант дебага алхимии - через compile_kwargs
         await session.execute(add_hotel_stmt) # создаем sql выражение
         await session.commit() # выполняем его
 
