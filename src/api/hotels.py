@@ -19,14 +19,22 @@ async def get_hotels(
 ):
     async with async_session_maker() as session:
         query = select(HotelsOrm)
+        if id:
+            query = query.where(HotelsOrm.id == id)
+        if title:
+            query = query.where(HotelsOrm.title == title)
+        query = (
+            query
+            .limit(pagination.per_page)
+            .offset(pagination.per_page * (pagination.page - 1))
+        )
+            
         result = await session.execute(query) # возвращает итератор - объект, который вернула алхимия, await - всегда запрос в базу
-        
         hotels = result.scalars().all()
-        print(type(hotels), hotels)
         return hotels
 
-    first_page_elem_ind = pagination.per_page * (pagination.page - 1)
-    last_page_elem_ind = pagination.per_page * pagination.page
+    # first_page_elem_ind = pagination.per_page * (pagination.page - 1)
+    # last_page_elem_ind = pagination.per_page * pagination.page
     # return hotels_[first_page_elem_ind:last_page_elem_ind]
 
 @router.delete("/{hotel_id}")
