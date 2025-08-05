@@ -1,6 +1,6 @@
 from fastapi import Body, Query, APIRouter
 
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 
 from src.schemas.hotels import Hotel, HotelPatch
 from src.api.dependencies import PaginationDep
@@ -9,34 +9,25 @@ from src.models.hotels import HotelsOrm
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
-hotels = [
-    {"id": 1, "title": "Sochi", "name": "sochi"},
-    {"id": 2, "title": "Дубай", "name": "dubai"},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
-]
-
 # Принимают query и path параметры (get, delete)
 # Задание №2: Пагинация для отелей
 @router.get("")
-def get_hotels(
+async def get_hotels(
     pagination: PaginationDep,
     id: int | None = Query(None, description="Айдишник"),
     title: str | None = Query(None, description="Название отеля")
 ):
-    hotels_ = []
-    for hotel in hotels:
-        if id and hotel['id'] != id:
-            continue
-        if title and hotel['title'] != title:
-            continue
-        hotels_.append(hotel)
+    async with async_session_maker() as session:
+        query = select(HotelsOrm)
+        result = await session.execute(query) # возвращает итератор - объект, который вернула алхимия, await - всегда запрос в базу
+        
+        hotels = result.scalars().all()
+        print(type(hotels), hotels)
+        return hotels
+
     first_page_elem_ind = pagination.per_page * (pagination.page - 1)
     last_page_elem_ind = pagination.per_page * pagination.page
-    return hotels_[first_page_elem_ind:last_page_elem_ind]
+    # return hotels_[first_page_elem_ind:last_page_elem_ind]
 
 @router.delete("/{hotel_id}")
 def delete_hotel(hotel_id: int):
@@ -67,8 +58,8 @@ async def create_hotel(
     async with async_session_maker() as session: # объявляем асинхронный контекстный менеджер, максимум 100 одновременных подключений, по умолчанию алхимия создает 5 подключ, при нагрузке - доп. 10
         add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump()) # преобразуем модель алхимии (экземпляр класса) в словарь вида {'title':, 'location':}; раскрываем в кварги через 2 *
         # print(add_hotel_stmt.compile(compile_kwargs={"literal_binds": True})) # 2ой вариант дебага алхимии - через compile_kwargs
-        await session.execute(add_hotel_stmt) # создаем sql выражение
-        await session.commit() # выполняем его
+        await session.execute(add_hotel_stmt) # выполнение sql запроса внутри транзакции
+        await session.commit() # фиксация изменений в бд - не вызывается для select запросов
 
     return {'status': 'OK'}
 
