@@ -1,7 +1,11 @@
-from fastapi import Query, APIRouter
+from fastapi import Body, Query, APIRouter
+
+from sqlalchemy import insert
 
 from src.schemas.hotels import Hotel, HotelPatch
 from src.api.dependencies import PaginationDep
+from src.database import async_session_maker
+from src.models.hotels import HotelsOrm
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -42,15 +46,29 @@ def delete_hotel(hotel_id: int):
 
 # Принимают body, request body (put, patch, post)
 @router.post("")
-def create_hotel(
-    hotel_data: Hotel
-):
-    global hotels
-    hotels.append({
-        'id': hotels[-1]['id'] + 1,
-        'title': hotel_data.title,
-        'name': hotel_data.name
+async def create_hotel(
+    hotel_data: Hotel = Body(openapi_examples={
+        "1": {
+        "summary": "Сочи",
+        "value": {
+            "title": "Отель Сочи 5 звезд у моря",
+            "location": "ул. Моря 1"
+            }
+        },
+        "2": {
+        "summary": "Дубай",
+        "value": {
+            "title": "Отель Дубай у фонтана",
+            "location": "ул. Шейха 2"
+            }
+        }
     })
+):
+    async with async_session_maker() as session: # объявляем асинхронный контекстный менеджер, максимум 100 одновременных подключений, по умолчанию алхимия создает 5 подключ, при нагрузке - доп. 10
+        add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump()) # преобразуем модель алхимии (экземпляр класса) в словарь вида {'title':, 'location':}; раскрываем в кварги через 2 *
+        await session.execute(add_hotel_stmt) # создаем sql выражение
+        await session.commit() # выполняем его
+
     return {'status': 'OK'}
 
 
