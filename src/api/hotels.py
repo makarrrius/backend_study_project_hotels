@@ -19,23 +19,12 @@ async def get_hotels(
     location: str | None = Query(None, description="Расположение отеля")
 ):
     async with async_session_maker() as session:
-        return await HotelsRepository(session).get_all()
-
-    # async with async_session_maker() as session:
-    #     query = select(HotelsOrm)
-    #     if title:
-    #         query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
-    #     if location:
-    #         query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
-    #     query = (
-    #         query
-    #         .limit(pagination.per_page)
-    #         .offset(pagination.per_page * (pagination.page - 1))
-    #     )
-            
-    #     result = await session.execute(query) # возвращает итератор - объект, который вернула алхимия, await - всегда запрос в базу
-    #     hotels = result.scalars().all()
-    #     return hotels
+        return await HotelsRepository(session).get_all(
+            location, 
+            title, 
+            limit=pagination.per_page, 
+            offset=pagination.per_page * (pagination.page - 1)
+        )
 
 @router.delete("/{hotel_id}")
 def delete_hotel(hotel_id: int):
