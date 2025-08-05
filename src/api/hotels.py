@@ -2,6 +2,7 @@ from fastapi import Body, Query, APIRouter
 
 from sqlalchemy import insert, select
 
+from repositories.hotels import HotelsRepository
 from src.schemas.hotels import Hotel, HotelPatch
 from src.api.dependencies import PaginationDep
 from src.database import async_session_maker
@@ -18,20 +19,23 @@ async def get_hotels(
     location: str | None = Query(None, description="Расположение отеля")
 ):
     async with async_session_maker() as session:
-        query = select(HotelsOrm)
-        if title:
-            query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
-        if location:
-            query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
-        query = (
-            query
-            .limit(pagination.per_page)
-            .offset(pagination.per_page * (pagination.page - 1))
-        )
+        return await HotelsRepository(session).get_all()
+
+    # async with async_session_maker() as session:
+    #     query = select(HotelsOrm)
+    #     if title:
+    #         query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
+    #     if location:
+    #         query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
+    #     query = (
+    #         query
+    #         .limit(pagination.per_page)
+    #         .offset(pagination.per_page * (pagination.page - 1))
+    #     )
             
-        result = await session.execute(query) # возвращает итератор - объект, который вернула алхимия, await - всегда запрос в базу
-        hotels = result.scalars().all()
-        return hotels
+    #     result = await session.execute(query) # возвращает итератор - объект, который вернула алхимия, await - всегда запрос в базу
+    #     hotels = result.scalars().all()
+    #     return hotels
 
 @router.delete("/{hotel_id}")
 def delete_hotel(hotel_id: int):
