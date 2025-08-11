@@ -7,8 +7,6 @@ from src.database import async_session_maker
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
-# Принимают query и path параметры (get, delete)
-# Задание №4: Фильтрация по подстроке
 @router.get("")
 async def get_hotels(
     pagination: PaginationDep,
@@ -22,6 +20,13 @@ async def get_hotels(
             limit=pagination.per_page, 
             offset=pagination.per_page * (pagination.page - 1)
         )
+    
+@router.get("/{hotel_id}")
+async def get_hotels(
+    hotel_id: int
+):
+    async with async_session_maker() as session:
+        return await HotelsRepository(session).get_one_or_none(id = hotel_id)
 
 @router.delete("/{hotel_id}")
 async def delete_hotel(
