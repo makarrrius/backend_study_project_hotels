@@ -24,8 +24,12 @@ class BaseRepository: # задаем базовый класс по паттер
         result = await self.session.execute(add_data_stmt)
         return result.scalars().one() # выполнение sql запроса внутри транзакции
             
-    async def edit(self, data: BaseModel, **filter_by) -> None: 
-        edit_data_stmt = update(self.model).filter_by(**filter_by).values(data.model_dump())
+    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None: 
+        edit_data_stmt = (
+            update(self.model).
+            filter_by(**filter_by).
+            values(data.model_dump(exclude_unset=exclude_unset)) # если в body пользователь не пришлет какой-то параметр, то алхимия его в бд не обновит
+        )
         await self.session.execute(edit_data_stmt)
 
     async def delete(self, **filter_by) -> None:        
