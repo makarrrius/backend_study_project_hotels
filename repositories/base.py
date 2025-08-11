@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
 
 class BaseRepository: # задаем базовый класс по паттерну - Репозиторий (DAO)
 
@@ -16,4 +16,8 @@ class BaseRepository: # задаем базовый класс по паттер
         query = select(self.model)
         result = await self.session.execute(query, **filter_by)
         return result.scalars().one_or_none()
-        
+    
+    async def add(self, hotel_data):
+        add_hotel_stmt = insert(self.model).values(hotel_data.model_dump())
+        print(add_hotel_stmt)
+        return await self.session.execute(add_hotel_stmt) # выполнение sql запроса внутри транзакции
