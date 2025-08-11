@@ -31,7 +31,7 @@ async def delete_hotel(
     hotel_id: int
 ):
     async with async_session_maker() as session:
-        await HotelsRepository(session).delete(hotel_id)
+        await HotelsRepository(session).delete(id=hotel_id)
         await session.commit()    
     return {'status': 'OK'}
 
@@ -67,9 +67,8 @@ async def change_all_hotel_data(
     hotel_data: Hotel
 ):
     async with async_session_maker() as session:
-        await HotelsRepository(session).edit(hotel_id, hotel_data)
+        await HotelsRepository(session).edit(hotel_data, id=hotel_id)
         await session.commit() # фиксация изменений в бд - не вызывается для select запросов
-
     return {'status': 'OK'}
 
 @router.patch('/{hotel_id}')

@@ -24,20 +24,10 @@ class BaseRepository: # задаем базовый класс по паттер
         result = await self.session.execute(add_data_stmt)
         return result.scalars().one() # выполнение sql запроса внутри транзакции
             
-    async def edit(self, id: int, data: BaseModel) -> None:
-        
-        db_item = await self.get_one_or_none(id=id)
-        if db_item is None:
-            raise HTTPException(status_code=404, detail=f"Id {id} not found")
-        
-        edit_data_stmt = update(self.model).where(self.model.id == id).values(data.model_dump())
-        await self.session.execute(edit_data_stmt) 
-
-    async def delete(self, id: int) -> None:
-        
-        db_item = await self.get_one_or_none(id=id)
-        if db_item is None:
-            raise HTTPException(status_code=404, detail=f"Id {id} not found")
-        
-        edit_data_stmt = delete(self.model).where(self.model.id == id)
+    async def edit(self, data: BaseModel, **filter_by) -> None: 
+        edit_data_stmt = update(self.model).filter_by(**filter_by).values(data.model_dump())
         await self.session.execute(edit_data_stmt)
+
+    async def delete(self, **filter_by) -> None:        
+        delete_data_stmt = delete(self.model).filter_by(**filter_by)
+        await self.session.execute(delete_data_stmt)
