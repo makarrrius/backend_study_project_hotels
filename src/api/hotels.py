@@ -27,9 +27,12 @@ async def get_hotels(
         )
 
 @router.delete("/{hotel_id}")
-def delete_hotel(hotel_id: int):
-    global hotels
-    hotels = [hotel for hotel in hotels if hotel['id'] != hotel_id]
+async def delete_hotel(
+    hotel_id: int
+):
+    async with async_session_maker() as session:
+        await HotelsRepository(session).delete(hotel_id)
+        await session.commit()    
     return {'status': 'OK'}
 
 # Принимают body, request body (put, patch, post)
@@ -58,20 +61,17 @@ async def create_hotel(
 
     return {'status': 'OK', "data": hotel}
 
-
-# Задача 1
-# PUT - ручка, клиент обязан отправить все параметры сущности кроме id, меняем только title и name, обязательно принимаем оба эти параметра
 @router.put('/{hotel_id}')
-def change_all_hotel_data(hotel_id: int, hotel_data: Hotel):
-    global hotels
-    for hotel in hotels:
-        if hotel['id'] == hotel_id:
-            hotel['title'] = hotel_data.title
-            hotel['name'] = hotel_data.name
-    return {'status': 'OK'} 
+async def change_all_hotel_data(
+    hotel_id: int,
+    hotel_data: Hotel
+):
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(hotel_id, hotel_data)
+        await session.commit() # фиксация изменений в бд - не вызывается для select запросов
 
-# Задача 2
-# PATCH - ручка, клиент обязан отправить все параметры сущности кроме id, меняем либо title, либо name, либо и то, и то, принимаем параметры опционально
+    return {'status': 'OK'}
+
 @router.patch('/{hotel_id}')
 def change_partly_hotel_data(
     hotel_id: int,
