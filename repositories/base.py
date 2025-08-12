@@ -2,9 +2,12 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 
+from src.schemas.hotels import Hotel
+
 class BaseRepository: # задаем базовый класс по паттерну - Репозиторий (DAO)
 
     model = None
+    schema: BaseModel = None
 
     def __init__(self, session): # открывать на каждый запрос сессию - не эффективно
         self.session = session # будем получать объект сессиию более верхнеуровневно (выше), чтобы при каждом запросе к бд не блокировать множество подлкючений
@@ -12,17 +15,22 @@ class BaseRepository: # задаем базовый класс по паттер
     async def get_all(self, *args, **kwargs):
         query = select(self.model)
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return [Hotel.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        return result.scalars().one_or_none()
+        model =  result.scalars().one_or_none()
+        if model is None:
+            return None
+        else:
+            return self.schema.model_validate(model, from_attributes=True) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def add(self, data: BaseModel):
         add_data_stmt = insert(self.model).values(data.model_dump()).returning(self.model)
         result = await self.session.execute(add_data_stmt)
-        return result.scalars().one() # выполнение sql запроса внутри транзакции
+        model = result.scalars().one() # выполнение sql запроса внутри транзакции
+        return self.schema.model_validate(model, from_attributes=True) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
             
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None: 
         edit_data_stmt = (
