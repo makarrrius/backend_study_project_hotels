@@ -13,4 +13,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env") # есть параметр extra = ingnore, чтобы в env файле брались только те переменные, которые указываются в коде
 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    
 settings = Settings()
