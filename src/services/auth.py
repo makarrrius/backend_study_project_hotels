@@ -19,3 +19,6 @@ class AuthService:
     
     def hash_password(self, password: str) -> str:
         return self.pwd_context.hash(password)
+    
+    def decode_token(self, encoded_token: str) -> dict:
+        return jwt.decode(encoded_token, settings.JWT_SECRET_KEY, algorithms=settings.JWT_ALGORITHM)
