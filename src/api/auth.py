@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 
+from api.dependencies import UserIdDep
 from services.auth import AuthService
 from src.repositories.users import UsersRepository
 from src.schemas.users import UserAdd, UserRequestAdd, UserRequestLogin
@@ -35,16 +36,10 @@ async def login_user(
         response.set_cookie('access_token', access_token)
         return {'access_token': access_token}
 
-@router.post("/only_auth")
-async def login_user(
-    request: Request, # Фастапи понимает, что если у данных такой тип - класс, то нужно собрать от пользователя хэдерсы, айпи адрес и тд
+@router.get("/me")
+async def get_me(
+    user_id: UserIdDep
 ):
-    access_token = request.cookies.get('access_token')
-    if access_token:
-        data = AuthService().decode_token(access_token)
-        user_id = data.get('user_id')
-        async with async_session_maker() as session:
-            user = await UsersRepository(session).get_one_or_none(id=user_id)
+    async with async_session_maker() as session:
+        user = await UsersRepository(session).get_one_or_none(id=user_id)
         return user
-    else:
-        raise HTTPException(status_code=401, detail='Пользователь не имеет доступа к данным')
