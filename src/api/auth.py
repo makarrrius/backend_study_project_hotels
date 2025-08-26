@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from services.auth import AuthService
 from src.repositories.users import UsersRepository
@@ -34,3 +34,13 @@ async def login_user(
         access_token = AuthService().create_access_token({'user_id':user.id})
         response.set_cookie('access_token', access_token)
         return {'access_token': access_token}
+
+@router.post("/only_auth")
+async def login_user(
+    request: Request, # Фастапи понимает, что если у данных такой тип - класс, то нужно собрать от пользователя хэдерсы, айпи адрес и тд
+):
+    access_token = request.cookies.get('access_token')
+    if access_token:
+        return {'access_token': access_token}
+    else:
+        raise HTTPException(status_code=401, detail='Пользователь не имеет доступа к данным')
