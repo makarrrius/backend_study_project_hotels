@@ -1,8 +1,5 @@
-from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
-
-from src.schemas.hotels import Hotel
 
 class BaseRepository: # задаем базовый класс по паттерну - Репозиторий (DAO)
 
@@ -12,10 +9,10 @@ class BaseRepository: # задаем базовый класс по паттер
     def __init__(self, session): # открывать на каждый запрос сессию - не эффективно
         self.session = session # будем получать объект сессиию более верхнеуровневно (выше), чтобы при каждом запросе к бд не блокировать множество подлкючений
          
-    async def get_all(self, *args, **kwargs):
-        query = select(self.model)
+    async def get_all(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        return [Hotel.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+        return [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)

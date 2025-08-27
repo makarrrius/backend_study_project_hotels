@@ -60,7 +60,6 @@ async def create_hotel(
     async with async_session_maker() as session: # объявляем асинхронный контекстный менеджер, максимум 100 одновременных подключений, по умолчанию алхимия создает 5 подключ, при нагрузке - доп. 10
         hotel = await HotelsRepository(session).add(hotel_data)
         await session.commit() # фиксация изменений в бд - не вызывается для select запросов
-
     return {'status': 'OK', "data": hotel}
 
 @router.put('/{hotel_id}')
