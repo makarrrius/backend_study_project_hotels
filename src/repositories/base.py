@@ -12,7 +12,7 @@ class BaseRepository: # задаем базовый класс по паттер
     async def get_all(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
-        return [self.schema.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
