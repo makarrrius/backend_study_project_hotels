@@ -2,7 +2,6 @@ from fastapi import Body, Query, APIRouter
 
 from src.schemas.hotels import Hotel, HotelAdd, HotelPatch
 from src.api.dependencies import DBDep, PaginationDep
-from src.database import async_session_maker
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -58,7 +57,7 @@ async def create_hotel(
     })
 ):
     hotel = await db.hotels.add(hotel_data)
-    await db.session.commit() # фиксация изменений в бд - не вызывается для select запросов
+    await db.commit() # фиксация изменений в бд - не вызывается для select запросов
     return {'status': 'OK', "data": hotel}
 
 @router.put('/{hotel_id}')
