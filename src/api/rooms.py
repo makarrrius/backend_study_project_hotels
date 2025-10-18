@@ -1,7 +1,5 @@
-from repositories.hotels import HotelsRepository
+from api.dependencies import DBDep
 from schemas.rooms import RoomsAdd, RoomsPatch
-from src.repositories.rooms import RoomsRepository
-from src.database import async_session_maker
 
 from fastapi import APIRouter, Body, HTTPException
 
@@ -10,13 +8,14 @@ router = APIRouter(prefix='/hotels', tags=['Номера'])
 
 @router.get('/{hotel_id}/rooms')
 async def get_rooms(
+    db: DBDep,
     hotel_id: int
 ):
-    async with async_session_maker() as session:
-        return await RoomsRepository(session).get_all(hotel_id = hotel_id)
+    return await db.rooms.get_all(hotel_id = hotel_id)
     
 @router.post('/rooms')
 async def add_rooms(
+    db: DBDep,
     room_data: RoomsAdd = Body(openapi_examples={
         "1": {
         "summary": "Пример 1",
@@ -50,42 +49,41 @@ async def add_rooms(
         }
     })
 ):
-    async with async_session_maker() as session:
-        if not await HotelsRepository(session).get_one_or_none(id=room_data.hotel_id):
-            raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
-        rooms = await RoomsRepository(session).add(room_data)
-        await session.commit()
+    if not await db.hotels.get_one_or_none(id=room_data.hotel_id):
+        raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
+    rooms = await db.rooms.add(room_data)
+    await db.commit()
     return {'status': 'OK', 'data': rooms}
 
 @router.delete('/rooms/{room_id}')
 async def delete_room(
+    db: DBDep,
     room_id: int
 ):
-    async with async_session_maker() as session:
-        await RoomsRepository(session).delete(id = room_id)
-        await session.commit()
+    await db.rooms.delete(id = room_id)
+    await db.commit()
     return {'status': 'OK'}
 
 @router.put('/rooms/{room_id}')
 async def change_all_room_data(
+    db: DBDep,
     room_id: int,
     room_data: RoomsAdd
 ):
-    async with async_session_maker() as session:
-        if not await HotelsRepository(session).get_one_or_none(id=room_data.hotel_id):
-            raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
-        await RoomsRepository(session).edit(data=room_data, id=room_id)
-        await session.commit()
+    if not await db.hotels.get_one_or_none(id=room_data.hotel_id):
+        raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
+    await db.rooms.edit(data=room_data, id=room_id)
+    await db.commit()
     return {'status': 'OK'}
 
 @router.patch('/rooms/{room_id}')
 async def change_all_room_data(
+    db: DBDep,
     room_id: int,
     room_data: RoomsPatch
 ):
-    async with async_session_maker() as session:
-        if not await HotelsRepository(session).get_one_or_none(id=room_data.hotel_id):
-            raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
-        await RoomsRepository(session).edit(data=room_data, id=room_id, exclude_unset=True)
-        await session.commit()
+    if not await db.hotels.get_one_or_none(id=room_data.hotel_id):
+        raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
+    await db.rooms.edit(data=room_data, id=room_id, exclude_unset=True)
+    await db.commit()
     return {'status': 'OK'}

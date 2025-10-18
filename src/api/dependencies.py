@@ -3,7 +3,10 @@ from pydantic import BaseModel
 
 from typing import Annotated
 
+from src.database import async_session_maker
+
 from services.auth import AuthService
+from utils.db_manager import DBManager
 
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(1, ge=1, description="Страница")]
@@ -23,4 +26,13 @@ def get_current_user_id(access_token: str = Depends(get_token)) -> int:
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)] # int = user_id
+
+def get_db_manager():
+    return DBManager(session_factory=async_session_maker)
+
+async def get_db():
+    async with get_db_manager() as db:
+        yield db
+
+DBDep = Annotated[DBManager, Depends(get_db)]
 
