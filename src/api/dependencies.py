@@ -5,8 +5,8 @@ from typing import Annotated
 
 from src.database import async_session_maker
 
-from services.auth import AuthService
-from utils.db_manager import DBManager
+from src.services.auth import AuthService
+from src.utils.db_manager import DBManager
 
 class PaginationParams(BaseModel):
     page: Annotated[int | None, Query(1, ge=1, description="Страница")]

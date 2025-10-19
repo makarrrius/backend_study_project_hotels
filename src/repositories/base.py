@@ -9,8 +9,12 @@ class BaseRepository: # задаем базовый класс по паттер
     def __init__(self, session): # открывать на каждый запрос сессию - не эффективно
         self.session = session # будем получать объект сессиию более верхнеуровневно (выше), чтобы при каждом запросе к бд не блокировать множество подлкючений
          
-    async def get_all(self, **filter_by):
-        query = select(self.model).filter_by(**filter_by)
+    async def get_all(self, *filter, **filter_by):
+        query = (
+            select(self.model)
+            .filter(*filter)
+            .filter_by(**filter_by)
+        )
         result = await self.session.execute(query)
         return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, Response
 
-from api.dependencies import DBDep, UserIdDep
-from services.auth import AuthService
+from src.api.dependencies import DBDep, UserIdDep
+from src.services.auth import AuthService
 from src.schemas.users import UserAdd, UserRequestAdd, UserRequestLogin
 
 router = APIRouter(prefix='/auth', tags=['Авторизация и аутентификация'])
