@@ -1,9 +1,22 @@
 from fastapi import APIRouter, Body
 
-from api.dependencies import DBDep, UserIdDep
+from api.dependencies import DBDep, PaginationDep, UserIdDep
 from schemas.bookings import BookingsAdd, BookingsAddRequest
 
 router = APIRouter(prefix='/bookings', tags = ['Бронирования'])
+
+@router.get("")
+async def get_all_bookings(
+    db: DBDep
+):
+    return await db.bookings.get_all()
+
+@router.get("/me")
+async def get_bookings_for_user(
+    db: DBDep,
+    user_id: UserIdDep
+):
+    return await db.bookings.get_all(user_id=user_id)
 
 @router.post("")
 async def add_booking(
