@@ -44,11 +44,6 @@ class HotelsRepository(BaseRepository):
         date_from: date, 
         date_to: date
     ):
-
-        if title:
-            query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
-        if location:
-            query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
         
         rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotels_ids_to_get = (
@@ -56,8 +51,8 @@ class HotelsRepository(BaseRepository):
             .select_from(RoomsOrm)
             .filter(RoomsOrm.id.in_(rooms_ids_to_get))
         )
-
-        query = select(HotelsOrm)
+        
+        query = select(HotelsOrm).filter(HotelsOrm.id.in_(hotels_ids_to_get))
         if title:
             query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
         if location:
@@ -65,7 +60,6 @@ class HotelsRepository(BaseRepository):
         
         query = (
             query
-            .filter(HotelsOrm.id.in_(hotels_ids_to_get))
             .limit(limit)
             .offset(offset)
         )
