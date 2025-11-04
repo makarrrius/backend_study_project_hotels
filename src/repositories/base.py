@@ -28,11 +28,15 @@ class BaseRepository: # задаем базовый класс по паттер
             return self.schema.model_validate(model, from_attributes=True) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def add(self, data: BaseModel):
-        add_data_stmt = insert(self.model).values(data.model_dump()).returning(self.model)
+        add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         result = await self.session.execute(add_data_stmt)
         model = result.scalars().one() # выполнение sql запроса внутри транзакции
         return self.schema.model_validate(model, from_attributes=True) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
-            
+
+    async def add_bulk(self, data: list[BaseModel]):
+        add_data_stmt = insert(self.model).values([item.model_dump() for item in data])
+        await self.session.execute(add_data_stmt)
+
     async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None: 
         edit_data_stmt = (
             update(self.model).

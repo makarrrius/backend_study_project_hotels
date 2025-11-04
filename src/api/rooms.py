@@ -1,6 +1,7 @@
 from datetime import date
+from src.schemas.facilities import RoomFacilitiesAdd
 from src.api.dependencies import DBDep
-from src.schemas.rooms import RoomsAdd, RoomsPatch
+from src.schemas.rooms import RoomsAdd, RoomsAddRequest, RoomsPatch
 
 from fastapi import APIRouter, Body, HTTPException, Query
 
@@ -19,7 +20,7 @@ async def get_rooms(
 @router.post('/rooms')
 async def add_rooms(
     db: DBDep,
-    room_data: RoomsAdd = Body(openapi_examples={
+    room_data: RoomsAddRequest = Body(openapi_examples={
         "1": {
         "summary": "Пример 1",
         "value" : {
@@ -27,7 +28,8 @@ async def add_rooms(
             "title" : "Тип 1_Эконом",
             "description": "Бюджетный вариант проживания",
             "price": 10000,
-            "quantity": 3
+            "quantity": 3,
+            "facilities_ids": [1,2]
             }
         },
         "2": {
@@ -37,7 +39,8 @@ async def add_rooms(
             "title" : "Тип 2_Комфорт",
             "description": "Комфортный вариант проживания",
             "price": 20000,
-            "quantity": 4
+            "quantity": 4,
+            "facilities_ids": [1]
             }
         },
         "3": {
@@ -47,16 +50,23 @@ async def add_rooms(
             "title" : "Тип 3_Бизнес",
             "description": "Люксовый вариант проживания",
             "price": 50000,
-            "quantity": 4
+            "quantity": 4,
+            "facilities_ids": [2]
             }
         }
     })
+    
 ):
+    _room_data = RoomsAdd(**room_data.model_dump())
+
     if not await db.hotels.get_one_or_none(id=room_data.hotel_id):
         raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
-    rooms = await db.rooms.add(room_data)
+    room = await db.rooms.add(_room_data)
+
+    rooms_facilities_data = [RoomFacilitiesAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids]
+    await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.commit()
-    return {'status': 'OK', 'data': rooms}
+    return {'status': 'OK', 'data': room}
 
 @router.delete('/rooms/{room_id}')
 async def delete_room(
