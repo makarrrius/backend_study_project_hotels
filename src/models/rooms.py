@@ -1,6 +1,6 @@
 from src.database import Base
 
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey
 
 class RoomsOrm(Base):
@@ -15,3 +15,8 @@ class RoomsOrm(Base):
     description: Mapped[str | None] # задание опционального параметра в 2 алхимии, в прошлой версии опц. пар-ры задавались так: Mapped[str] = mapped_column(nullable=True)
     price: Mapped[int]
     quantity: Mapped[int]
+
+    facilities: Mapped[list["FacilitiesORM"]] = relationship(
+        back_populates="rooms",
+        secondary="rooms_facilities",
+    )
