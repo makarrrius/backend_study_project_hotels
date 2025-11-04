@@ -1,7 +1,7 @@
 from datetime import date
 from src.schemas.facilities import RoomFacilitiesAdd
 from src.api.dependencies import DBDep
-from src.schemas.rooms import RoomsAdd, RoomsAddRequest, RoomsPatch
+from src.schemas.rooms import RoomsAdd, RoomsAddRequest, RoomsPatch, RoomsPatchRequest
 
 from fastapi import APIRouter, Body, HTTPException, Query
 
@@ -81,22 +81,33 @@ async def delete_room(
 async def change_all_room_data(
     db: DBDep,
     room_id: int,
-    room_data: RoomsAdd
+    room_data: RoomsAddRequest
 ):
+    _room_data = RoomsAdd(**room_data.model_dump())
     if not await db.hotels.get_one_or_none(id=room_data.hotel_id):
         raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
-    await db.rooms.edit(data=room_data, id=room_id)
+    
+    await db.rooms.edit(data=_room_data, id=room_id)
+    await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=room_data.facilities_ids)
     await db.commit()
     return {'status': 'OK'}
 
 @router.patch('/rooms/{room_id}')
-async def change_all_room_data(
+async def change_partly_room_data(
     db: DBDep,
     room_id: int,
-    room_data: RoomsPatch
+    room_data: RoomsPatchRequest
 ):
+    _room_data_dict = room_data.model_dump(exclude_unset=True)
+    _room_data = RoomsPatch(**_room_data_dict)
+    
     if not await db.hotels.get_one_or_none(id=room_data.hotel_id):
         raise HTTPException(status_code=409, detail='Отеля с таким hotel_id не существует')
-    await db.rooms.edit(data=room_data, id=room_id, exclude_unset=True)
+    
+    await db.rooms.edit(data=_room_data, id=room_id, exclude_unset=True)
+    
+    if 'facilities_ids' in _room_data_dict:
+        await db.rooms_facilities.set_room_facilities(room_id=room_id, facilities_ids=_room_data_dict['facilities_ids'])
+    
     await db.commit()
     return {'status': 'OK'}
