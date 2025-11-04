@@ -16,6 +16,10 @@ async def get_rooms(
     date_to: date = Query(example='2024-08-10')
 ):
     return await db.rooms.get_filtered_by_time(hotel_id = hotel_id, date_from=date_from, date_to=date_to)
+
+@router.get("/{hotel_id}/rooms/{room_id}")
+async def get_room(hotel_id: int, room_id: int, db: DBDep):
+    return await db.rooms.get_one_or_none_with_rels(id=room_id, hotel_id=hotel_id)
     
 @router.post('/rooms')
 async def add_rooms(
