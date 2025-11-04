@@ -1,5 +1,6 @@
 from datetime import date
 from sqlalchemy import select
+from src.repositories.mappers.mappers import HotelDataMapper
 from src.models.rooms import RoomsOrm
 from src.repositories.utils import rooms_ids_for_booking
 from src.schemas.hotels import Hotel
@@ -8,32 +9,7 @@ from src.repositories.base import BaseRepository
 
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
-    schema = Hotel
-
-    # async def get_all(
-    #         self,
-    #         location,
-    #         title,
-    #         limit,
-    #         offset,
-    # ) -> list[Hotel]:
-        
-    #     query = select(HotelsOrm)
-        
-    #     if title:
-    #         query = query.filter(HotelsOrm.title.ilike(f'%{title}%'))
-    #     if location:
-    #         query = query.filter(HotelsOrm.location.ilike(f'%{location}%'))
-    #     query = (
-    #         query
-    #         .limit(limit)
-    #         .offset(offset)
-    #     )
-
-    #     print(query.compile(compile_kwargs={"literal_binds": True}))    
-    #     result = await self.session.execute(query)
-        
-    #     return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+    mapper = HotelDataMapper
     
     async def get_filtered_by_time(
         self,
@@ -65,5 +41,5 @@ class HotelsRepository(BaseRepository):
         )
         
         result = await self.session.execute(query)
-        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]
     

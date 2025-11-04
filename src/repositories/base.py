@@ -1,10 +1,12 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 
+from src.repositories.mappers.base import DataMapper
+
 class BaseRepository: # задаем базовый класс по паттерну - Репозиторий (DAO)
 
     model = None
-    schema: BaseModel = None
+    mapper: DataMapper = None
 
     def __init__(self, session): # открывать на каждый запрос сессию - не эффективно
         self.session = session # будем получать объект сессиию более верхнеуровневно (выше), чтобы при каждом запросе к бд не блокировать множество подлкючений
@@ -16,7 +18,7 @@ class BaseRepository: # задаем базовый класс по паттер
             .filter_by(**filter_by)
         )
         result = await self.session.execute(query)
-        return [self.schema.model_validate(model, from_attributes=True) for model in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+        return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()] # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def get_one_or_none(self, **filter_by):
         query = select(self.model).filter_by(**filter_by)
@@ -25,13 +27,13 @@ class BaseRepository: # задаем базовый класс по паттер
         if model is None:
             return None
         else:
-            return self.schema.model_validate(model, from_attributes=True) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+            return self.mapper.map_to_domain_entity(model) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
     
     async def add(self, data: BaseModel):
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         result = await self.session.execute(add_data_stmt)
         model = result.scalars().one() # выполнение sql запроса внутри транзакции
-        return self.schema.model_validate(model, from_attributes=True) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+        return self.mapper.map_to_domain_entity(model) # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
 
     async def add_bulk(self, data: list[BaseModel]):
         add_data_stmt = insert(self.model).values([item.model_dump() for item in data])
