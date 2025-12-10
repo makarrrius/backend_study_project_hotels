@@ -2,6 +2,10 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_cache.decorator import cache
+
 import sys
 from pathlib import Path
 
@@ -20,6 +24,8 @@ from src.config import settings
 async def lifespan(app: FastAPI):
     # При старте приложения
     await redis_manager.connect()
+
+    FastAPICache.init(RedisBackend(redis_manager), prefix="fastapi-cache")
     yield
     await redis_manager.close()
     # При выключении приложения
