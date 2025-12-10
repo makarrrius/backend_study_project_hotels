@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     REDIS_PORT: int
 
     @property
+    def REDIS_URL(self): # адрес для подключения к БД - DSN - формат строки подключения
+        return f'redis://{self.REDIS_HOST}:{self.REDIS_PORT}'
+
+    @property
     def db_url(self): # адрес для подключения к БД - DSN - формат строки подключения
         return f'postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}'
 
