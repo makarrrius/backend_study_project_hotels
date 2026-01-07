@@ -24,19 +24,19 @@ class Rooms(RoomsAdd):
 
 
 class RoomsPatchRequest(BaseModel):
-    hotel_id: int | None = (None,)
-    title: str | None = (None,)
+    hotel_id: int | None = None
+    title: str | None = None
     description: str | None = None
-    price: int | None = (None,)
+    price: int | None = None
     quantity: int | None = None
     facilities_ids: list[int] = []
 
 
 class RoomsPatch(BaseModel):
-    hotel_id: int | None = (None,)
-    title: str | None = (None,)
+    hotel_id: int | None = None
+    title: str | None = None
     description: str | None = None
-    price: int | None = (None,)
+    price: int | None = None
     quantity: int | None = None
 
 
