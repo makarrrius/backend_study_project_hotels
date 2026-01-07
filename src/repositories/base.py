@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
+from sqlalchemy.exc import NoResultFound
 
+from src.exceptions import ObjectNotFoundException
 from src.repositories.mappers.base import DataMapper
 
 
@@ -28,6 +30,20 @@ class BaseRepository:  # задаем базовый класс по патте�
             return self.mapper.map_to_domain_entity(
                 model
             )  # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+
+    async def get_one_or_none(self, **filter_by):
+        query = select(self.model).filter_by(**filter_by)
+        result = await self.session.execute(query)
+        try:
+            model = result.scalars().one_or_none()
+        except NoResultFound:
+            raise ObjectNotFoundException
+        if model is None:
+            return None
+        else:
+            return self.mapper.map_to_domain_entity(
+                model
+            )
 
     async def add(self, data: BaseModel):
         add_data_stmt = (
