@@ -3,7 +3,8 @@ from src.database import Base
 
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import ForeignKey
+
 
 class BookingsORM(Base):
     __tablename__ = "bookings"

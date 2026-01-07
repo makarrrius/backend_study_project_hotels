@@ -4,7 +4,6 @@ from fastapi import FastAPI
 
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache
 
 import sys
 from pathlib import Path
@@ -18,7 +17,7 @@ from src.api.rooms import router as router_rooms
 from src.api.bookigns import router as router_bookings
 from src.api.facilities import router as router_facilities
 from src.api.images import router as router_images
-from src.config import settings
+from src.config import settings  # noqa: F401
 
 
 @asynccontextmanager
