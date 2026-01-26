@@ -8,8 +8,8 @@ DBModelType = TypeVar("DBModelType", bound=Base)
 
 
 class DataMapper:
-    db_model: type[DBModelType] = None
-    schema: type[schemaType] = None
+    db_model: type[DBModelType]
+    schema: type[schemaType]
 
     @classmethod
     def map_to_domain_entity(cls, data):
