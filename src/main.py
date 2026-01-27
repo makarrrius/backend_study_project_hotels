@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 import uvicorn
 from fastapi import FastAPI
 
@@ -9,6 +10,8 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
+
+logging.basicConfig(level=logging.INFO)
 
 from src.init import redis_manager
 from src.api.hotels import router as router_hotels

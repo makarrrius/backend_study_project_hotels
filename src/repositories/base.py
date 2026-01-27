@@ -1,3 +1,4 @@
+import logging
 from pydantic import BaseModel
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.exc import NoResultFound
@@ -46,14 +47,18 @@ class BaseRepository:  # задаем базовый класс по патте�
             )
 
     async def add(self, data: BaseModel):
-        add_data_stmt = (
-            insert(self.model).values(**data.model_dump()).returning(self.model)
-        )
-        result = await self.session.execute(add_data_stmt)
-        model = result.scalars().one()  # выполнение sql запроса внутри транзакции
-        return self.mapper.map_to_domain_entity(
-            model
-        )  # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+        try:
+            add_data_stmt = (
+                insert(self.model).values(**data.model_dump()).returning(self.model)
+            )
+            result = await self.session.execute(add_data_stmt)
+            model = result.scalars().one()  # выполнение sql запроса внутри транзакции
+            return self.mapper.map_to_domain_entity(
+                model
+            )  # преобразование сущности БД в пайдентик схему, чтобы принимать на вход пайдентик схему и ее же отдавать на выход - паттерн DataMapper
+        except Exception as e:
+            logging.error(f"Не удалось добавить данные в БД, ошибка: {e}")
+            raise
 
     async def add_bulk(self, data: list[BaseModel]):
         add_data_stmt = insert(self.model).values([item.model_dump() for item in data])
