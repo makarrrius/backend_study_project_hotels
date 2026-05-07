@@ -9,6 +9,12 @@ class NabronirovalException(Exception):
     def __init__(self, *args, **kwargs):
         super().__init__(self.detail, *args, **kwargs)
 
+class RoomNotFoundException(NabronirovalException):
+    detail = "Номер не найден"
+
+
+class HotelNotFoundException(NabronirovalException):
+    detail = "Отель не найден"
 
 class ObjectNotFoundException(NabronirovalException):
     detail = "Объект не найден"
