@@ -4,9 +4,10 @@ import jwt
 from datetime import timedelta, timezone, datetime
 
 from config import settings
+from services.base import BaseService
 
 
-class AuthService:
+class AuthService(BaseService):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def create_access_token(self, data: dict) -> str:
